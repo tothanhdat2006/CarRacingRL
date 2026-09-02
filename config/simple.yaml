@@ -1,0 +1,10 @@
+data:
+  dataset_path: "./data"
+
+model:
+  save_path: "./output"
+  save_name: "simple_model.pth"
+  
+train:
+  lr: 2e-5
+  num_epochs: 5
