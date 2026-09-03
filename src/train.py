@@ -18,7 +18,7 @@ def train_model(configs):
     model = SimpleModel()
     optimizer = Adam(model.parameters(), lr=configs.train.lr)
     # scheduler = 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.MSELoss()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
@@ -38,12 +38,14 @@ def train_model(configs):
                 optimizer.step()
 
                 pbar.set_postfix(**{'loss (batch)': loss.item()})
+                pbar.update(len(obs_inp))
 
-    torch.save({
-        'epoch': epoch,
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
-        'loss': loss},
+    os.makedirs(configs.model.save_path, exist_ok=True)
+    torch.save(
+        {
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict()
+        },
         os.path.join(configs.model.save_path, configs.model.save_name)
     )
         

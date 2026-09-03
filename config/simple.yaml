@@ -3,8 +3,8 @@ data:
 
 model:
   save_path: "./output"
-  save_name: "simple_model.pth"
+  save_name: "simple_2epoch.pth"
   
 train:
   lr: 2e-5
-  num_epochs: 5
+  num_epochs: 2

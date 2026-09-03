@@ -18,6 +18,11 @@ class ImitationDatset(Dataset):
             T.ToDtype(torch.float32, scale=True),
             T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
+
+        self.augment_data()
+
+    def augment_data(self):
+        pass
         
     def __len__(self):
         return len(self.actions)
