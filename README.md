@@ -11,6 +11,9 @@ Goal:
 - [ ] Data augmentation + More heuristics
 - [ ] Train MultiClass prediction model (1.2.b)
 - [x] Formulate as regression target and re-train (1.2.c)
+- [ ] Implement Deep Q-Network and Deep Q-Learning
+- [ ] Investigate influence of discount factor
+- [ ] Implement Double Q-Learning
 - [ ] Write report and blog
 
 
