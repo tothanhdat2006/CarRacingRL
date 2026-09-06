@@ -1,9 +1,9 @@
 import argparse
 from omegaconf import OmegaConf
 
-from src.train import train_model
-from src.eval import eval_model
-from src.visualize import visualize_model
+from imitation_src.train import train_model
+from imitation_src.eval import eval_model
+from imitation_src.visualize import visualize_model
 
 
 if __name__ == "__main__":

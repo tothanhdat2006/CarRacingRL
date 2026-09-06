@@ -16,6 +16,8 @@ Goal:
 - [ ] Implement Double Q-Learning
 - [ ] Write report and blog
 
+### Some visualizations
+Imitation learning with 2 epochs: ![Imitation learning visualization GIF](./assets/imitation_visualization.gif)
 
 ### Notes
 - Training 1 epoch (Adam, lr = 1e-5) for simple model yields normal results in first 400 steps. After 400 steps, the car stops moving

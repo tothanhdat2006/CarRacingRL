@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from PIL import Image
 
 import torch
 import torchvision.transforms.v2 as T
@@ -19,9 +20,13 @@ def visualize_model(configs):
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
 
-    render_mode = 'human'
+    all_obs = []
+
+    render_mode = 'rgb_array'
     env = gym.make('CarRacing-v3', render_mode=render_mode)
     obs, _ = env.reset()
+    all_obs.append(obs)
+
     total_reward = 0
     num_steps = 1000
     for t in range(num_steps):
@@ -32,5 +37,14 @@ def visualize_model(configs):
         # print(steer, gas, brake)
         obs, reward, done, trunc, info = env.step(np.array([steer, gas, brake]))
         total_reward += reward
+        all_obs.append(obs)
+
+    # https://stackoverflow.com/questions/63047707/how-do-i-convert-a-numpy-array-to-a-gif
+    all_frames = [Image.fromarray(obs) for obs in all_obs]
+    all_frames[0].save(os.path.join(configs.vis.save_path, "visualization.gif"), 
+                    save_all=True, 
+                    append_images=all_frames[1:],
+                    duration=33.33,
+                    loop=0)
 
     print(total_reward / num_steps)

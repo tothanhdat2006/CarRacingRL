@@ -5,6 +5,10 @@ model:
   save_path: "./output"
   save_name: "simple_2epoch.pth"
   
+vis:
+  save_path: "./output"
+
 train:
   lr: 2e-5
   num_epochs: 2
+  total_timesteps: 5000
