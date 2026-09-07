@@ -88,9 +88,6 @@ def q_step(
 
     s_transformed = transforms(s_tensor)
     s_next_transformed = transforms(s_next_tensor)
-    print(s_transformed.shape)
-    return 0.0
-
     # 4. Compute Q targets using old parameters
     with torch.no_grad():
         q_targets = target_model(s_next_transformed) # (B, A)
@@ -113,6 +110,7 @@ def q_step(
     loss = F.mse_loss(q_action_values, y_targets)
     optimizer.zero_grad()
     loss.backward()
+    nn.utils.clip_grad_norm_(policy_model.parameters(), max_norm=1.0) # clip to [-1.0, 1.0]
     optimizer.step()
     return loss.item()
 

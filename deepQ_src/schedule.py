@@ -17,7 +17,7 @@ class LinearSchedule(object):
         self.final_p = final_p
         self.initial_p = initial_p
 
-    def value(self, t):
+    def get_eps(self, t):
         """Value of the schedule at time t"""
         fraction = min(float(t) / self.schedule_timesteps, 1.0)
         return self.initial_p + fraction * (self.final_p - self.initial_p)

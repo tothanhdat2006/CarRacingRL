@@ -1,10 +1,12 @@
-from datetime import time
 import os
 from tqdm import tqdm
+import numpy as np
+import time
 
 import torch
-import torch.nn as nn
 from torch.optim import Adam
+import torchvision.transforms.v2 as T
+import gymnasium as gym
 
 from .replay_buffer import ReplayBuffer
 from .nn_model import DQN, q_step, update_target_net
@@ -12,31 +14,42 @@ from .action import Action_GetSet, get_actions
 from .schedule import LinearSchedule
 from .utils import visualize_train, get_state
 
-def train_model(env, configs, new_actions = []):
+def train_model(configs, new_actions = []):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # https://docs.pytorch.org/vision/stable/transforms.html
+    transforms = T.Compose([
+        T.ToDtype(torch.float32, scale=True),
+        T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+
     print("Config data")
     replay_buffer = ReplayBuffer(configs.data.buffer_size)
+
+    print("Config environment")
+    render_mode = 'rgb_array'
+    env = gym.make('CarRacing-v3', render_mode=render_mode)
+    obs, _ = env.reset()
 
     print("Config model")
     action_getset = Action_GetSet()
     if len(new_actions) > 0:
-        action_getset.set_actions(new_actions) # override new actions for new games
+        action_getset.set_actions(new_actions) # override new actions for new strategy
     actions = action_getset.get_actions()
     action_size = len(actions)
     target_model = DQN(action_size)
     policy_model = DQN(action_size)
+    target_model.to(device)
+    policy_model.to(device)
+    policy_model.train()
+    target_model.load_state_dict(policy_model.state_dict())
+    target_model.eval()
+
     optimizer = Adam(policy_model.parameters(), lr=configs.train.lr)
     scheduler_exploration = LinearSchedule(
         schedule_timesteps=int(configs.train.exploration_fraction * configs.train.total_timesteps),
         initial_p=1.0,
         final_p=configs.train.exploration_final_eps
     )
-
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    target_model.to(device)
-    policy_model.to(device)
-    policy_model.train()
-    target_model.load_state_dict(policy_model.state_dict())
-    target_model.eval()
 
     print("Training...")
     losses = []
@@ -46,31 +59,31 @@ def train_model(env, configs, new_actions = []):
         for t in range(configs.train.total_timesteps):
             # https://storage.googleapis.com/deepmind-media/dqn/DQNNaturePaper.pdf
             # 1. Take actions according to eps-greedy policy
-            chosen_action, action_id = get_actions(obs, policy_model, action_size, actions, scheduler_exploration, t, is_greedy=False)
+            obs_tensor = transforms(torch.tensor(obs[np.newaxis], device=device).permute(0, 3, 1, 2))
+            chosen_action, action_id = get_actions(obs_tensor, policy_model, action_size, actions, scheduler_exploration, t, is_greedy=False)
             
             # 2. Sample new state and store to replay buffer
             ## 2.1 frame-skipping
             """
-            Atari paper state that:
+            Atari paper:
                 Following previous approaches to playing Atari 2600 games,we also use a simple
                 frame-skipping technique15. More precisely, the agent sees and selects actions on
                 every kth frame instead of every frame, and its last action is repeated on skipped
                 frames
             """
             for frame in range(configs.train.num_action_repeat):
-                new_obs, reward, term, trunc, _ = env.step(chosen_action)
+                new_obs, reward, term, trunc, _ = env.step(np.array(chosen_action))
                 done = term or trunc
                 eps_reward[-1] += reward
                 if done:
                     break
             ## 2.2 store in replay buffer D
             """
-            Atari paper state that:
+            Atari paper states that:
                 learning directly from consecutive samples is inefficient since there are correlations between samples
                 and learning on policy will produce data follow policy -> data are less diverse and may stuck in local optima
             """
-            new_obs_state = get_state(new_obs)
-            replay_buffer.add(obs_state, action_id, reward, new_obs_state)
+            replay_buffer.add_sample(obs, action_id, reward, new_obs, done)
             obs = new_obs
 
             ## 2.3 check terminal or truncated
@@ -91,10 +104,14 @@ def train_model(env, configs, new_actions = []):
                     device, 
                     configs.train.use_DoubleQ)
                 losses.append(loss)
+                pbar.set_postfix(**{"loss": np.mean(losses)})
+                torch.cuda.empty_cache()
 
             # 6. update target network
             if t > configs.train.learning_starts and t % configs.train.target_update_freq == 0:
                 update_target_net(policy_model, target_model)
+
+            pbar.update(1)
 
     end_time = time.time()
     print(f"Train for total {end_time - start_time:.5f} sec")

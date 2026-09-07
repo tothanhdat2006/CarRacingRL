@@ -19,7 +19,7 @@ class ReplayBuffer():
             self.buffer[self.current_idx] = (obs, act, reward, obs_next, done)
         self.current_idx += 1
 
-    def _encode_sample(self, idx_list):
+    def _encode_samples(self, idx_list):
         """
         Encode the samples before return
 
@@ -42,5 +42,5 @@ class ReplayBuffer():
         """
         Main sample logic that randomly draw (s, a, r, s') from buffer
         """
-        idx_list = np.random.randint(0, self.max_size, num_samples)
+        idx_list = np.random.randint(0, len(self.buffer), num_samples)
         return self._encode_samples(idx_list)

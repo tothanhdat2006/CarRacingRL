@@ -1,9 +1,10 @@
 data:
   dataset_path: "./data"
+  buffer_size: 200
 
 model:
   save_path: "./output"
-  save_name: "simple_2epoch.pth"
+  save_name: "dqn_5000steps.pth"
   
 vis:
   save_path: "./output"
@@ -11,4 +12,13 @@ vis:
 train:
   lr: 2e-5
   num_epochs: 2
+  batch_size: 4
+  gamma: 0.9
   total_timesteps: 5000
+  exploration_fraction: 0.5
+  exploration_final_eps: 0.1
+  num_action_repeat: 4
+  learning_starts: 100
+  train_freq: 250
+  target_update_freq: 500
+  use_DoubleQ: false
