@@ -20,5 +20,5 @@ train:
   num_action_repeat: 4
   learning_starts: 100
   train_freq: 250
-  target_update_freq: 500
-  use_DoubleQ: false
+  target_update_freq: 50
+  use_DoubleQ: true

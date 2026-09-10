@@ -13,12 +13,9 @@ if __name__ == "__main__":
 
     if args.learn == "imitation":
         from imitation_src.train import train_model
-        from imitation_src.eval import eval_model
         from imitation_src.visualize import visualize_model
         if args.mode == 'train':
             train_model(configs)
-        elif args.mode == 'eval':
-            eval_model(configs)
         else:
             visualize_model(configs)
     elif args.learn == "dqn":
